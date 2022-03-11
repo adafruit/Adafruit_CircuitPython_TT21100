@@ -16,19 +16,14 @@ Implementation Notes
 
 **Hardware:**
 
-.. todo:: Add links to any specific hardware product page(s), or category page(s).
-  Use unordered list & hyperlink rST inline format: "* `Link Text <url>`_"
+* `Espressif ESP32-S3 Box <https://www.adafruit.com/product/5290>`_
 
 **Software and Dependencies:**
 
 * Adafruit CircuitPython firmware for the supported boards:
   https://circuitpython.org/downloads
+* Adafruit's Bus Device library: https://github.com/adafruit/Adafruit_CircuitPython_BusDevice
 
-.. todo:: Uncomment or remove the Bus Device and/or the Register library dependencies
-  based on the library's use of either.
-
-# * Adafruit's Bus Device library: https://github.com/adafruit/Adafruit_CircuitPython_BusDevice
-# * Adafruit's Register library: https://github.com/adafruit/Adafruit_CircuitPython_Register
 """
 
 __version__ = "0.0.0-auto.0"
@@ -45,11 +40,13 @@ try:
 except ImportError:
     pass
 
-# This is based on: https://github.com/espressif/esp-box/blob/master/components/i2c_devices/touch_panel/tt21100.c
+# This is based on:
+# https://github.com/espressif/esp-box/blob/master/components/i2c_devices/touch_panel/tt21100.c
+
 
 class TT21100:
     """
-    A driver for the FocalTech capacitive touch sensor.
+    A driver for the TT21100 capacitive touch sensor.
     """
 
     def __init__(self, i2c, address=0x24, irq_pin=None):
@@ -60,27 +57,25 @@ class TT21100:
         self._data_len = array.array("H", [0])
 
         # Poll for start up.
-        with self._i2c as i2c:
-          while self._data_len[0] != 0x0000:
-            i2c.readinto(self._data_len)
-            time.sleep(0.02)
+        with self._i2c as i2c_transaction:
+            while self._data_len[0] != 0x0000:
+                i2c_transaction.readinto(self._data_len)
+                time.sleep(0.02)
 
     @property
     def touched(self) -> int:
         """ Returns the number of touches currently detected """
         with self._i2c as i2c:
-          i2c.readinto(self._data_len)
-          # Throw away packets that are header only because they don't actually
-          # have any touches
-          if self._data_len[0] == 7:
-            i2c.readinto(self._bytes, end=7)
+            i2c.readinto(self._data_len)
+            # Throw away packets that are header only because they don't actually
+            # have any touches
+            if self._data_len[0] == 7:
+                i2c.readinto(self._bytes, end=7)
 
-        if self._data_len[0] == 0:
-          return 0
         if self._data_len[0] % 10 == 7:
-          return self._data_len[0] // 10
+            return self._data_len[0] // 10
+        return 0
 
-    # pylint: disable=unused-variable
     @property
     def touches(self) -> List[dict]:
         """
@@ -90,23 +85,19 @@ class TT21100:
         touchpoints = []
         self._bytes[2] = 0
         while self._bytes[2] != 1:
-          with self._i2c as i2c:
-            i2c.readinto(self._data_len)
-            # Empty queue
-            if self._data_len[0] == 2:
-              return []
-            i2c.readinto(self._bytes, end=self._data_len[0])
+            with self._i2c as i2c:
+                i2c.readinto(self._data_len)
+                # Empty queue
+                if self._data_len[0] in (0, 2):
+                    return []
+                i2c.readinto(self._bytes, end=self._data_len[0])
 
+        for i in range(self._data_len[0] // 10):
+            touch_id, x, y, pressure = struct.unpack_from(
+                "xBHHBxxx", self._bytes, offset=10 * i + 7
+            )
+            touch_id = touch_id & 0x1F
+            point = {"x": x, "y": y, "id": touch_id, "pressure": pressure}
 
-        ts = struct.unpack_from("xxxHxx", self._bytes)[0]
-        for t in range(self._data_len[0] // 10):
-            touch_type, touch_id, x, y, pressure = struct.unpack_from("BBHHBxxx", self._bytes, offset=10 * t + 7)
-            touch_id = touch_id & 0x1f
-            point = {"x": x, "y": y, "id": touch_id}
-        # The data is one header called the report followed by touch records.
-
-            # point = {"x": x, "y": y, "id": touch_id}
-            # if self._debug:
-            #     print("id: {}, x: {}, y: {}".format(touch_id, x, y))
             touchpoints.append(point)
         return touchpoints
