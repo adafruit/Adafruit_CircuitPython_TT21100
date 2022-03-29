@@ -64,7 +64,7 @@ class TT21100:
 
     @property
     def touched(self) -> int:
-        """ Returns the number of touches currently detected """
+        """Returns the number of touches currently detected"""
         with self._i2c as i2c:
             i2c.readinto(self._data_len)
             # Throw away packets that are header only because they don't actually
