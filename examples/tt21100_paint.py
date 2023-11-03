@@ -25,7 +25,7 @@ palette[2] = 0x0000FF
 tg = displayio.TileGrid(pixels, pixel_shader=palette)
 g = displayio.Group()
 g.append(tg)
-display.show(g)
+display.root_group = g
 
 while True:
     for point in tt.touches:
