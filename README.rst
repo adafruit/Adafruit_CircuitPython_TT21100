@@ -81,7 +81,7 @@ following command to install:
 
 .. code-block:: shell
 
-    circup install tt21100
+    circup install adafruit_tt21100
 
 Or the following command to update an existing version:
 
