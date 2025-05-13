@@ -7,9 +7,10 @@ touch and blue for the second concurrent touch.
 """
 
 import bitmaptools
-import busio
 import board
+import busio
 import displayio
+
 import adafruit_tt21100
 
 # Create library object using our Bus I2C & SPI port
@@ -33,6 +34,4 @@ while True:
         y = point["y"]
         x = display.width - point["x"]
         size = point["pressure"] - 20
-        bitmaptools.fill_region(
-            pixels, x - size, y - size, x + size, y + size, point["id"] + 1
-        )
+        bitmaptools.fill_region(pixels, x - size, y - size, x + size, y + size, point["id"] + 1)

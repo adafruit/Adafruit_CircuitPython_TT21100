@@ -88,7 +88,7 @@ class TT21100:
             with self._i2c as i2c:
                 i2c.readinto(self._data_len)
                 # Empty queue
-                if self._data_len[0] in (0, 2):
+                if self._data_len[0] in {0, 2}:
                     return []
                 i2c.readinto(self._bytes, end=self._data_len[0])
 

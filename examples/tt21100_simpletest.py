@@ -8,8 +8,10 @@ Example for getting touch data from a TT21100 capacitive touch driver over I2C
 """
 
 import time
-import busio
+
 import board
+import busio
+
 import adafruit_tt21100
 
 # Create library object (named "tt") using a Bus I2C port
