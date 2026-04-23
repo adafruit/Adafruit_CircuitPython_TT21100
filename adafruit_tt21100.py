@@ -96,7 +96,7 @@ class TT21100:
             touch_id, x, y, pressure = struct.unpack_from(
                 "xBHHBxxx", self._bytes, offset=10 * i + 7
             )
-            touch_id = touch_id & 0x1F
+            touch_id &= 0x1F
             point = {"x": x, "y": y, "id": touch_id, "pressure": pressure}
 
             touchpoints.append(point)
